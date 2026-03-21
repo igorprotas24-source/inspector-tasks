@@ -1,171 +1,262 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>Панель Задач Инспектора</title>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<style>
-body {
-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
-color: var(--tg-theme-text-color, #000000);
-margin: 0;
-padding: 16px;
-box-sizing: border-box;
-}
-h1 {
-font-size: 24px;
-margin-bottom: 16px;
-color: var(--tg-theme-text-color, #000);
-text-align: center;
-}
-.category {
-background-color: var(--tg-theme-bg-color, #ffffff);
-border-radius: 12px;
-padding: 16px;
-margin-bottom: 16px;
-box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-}
-.category-title {
-font-weight: 600;
-font-size: 16px;
-margin-bottom: 12px;
-color: var(--tg-theme-hint-color, #999999);
-text-transform: uppercase;
-letter-spacing: 0.5px;
-}
-.task-list {
-list-style: none;
-padding: 0;
-margin: 0;
-}
-.task-item {
-display: flex;
-align-items: center;
-padding: 12px 0;
-border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f0f0f0);
-}
-.task-item:last-child {
-border-bottom: none;
-padding-bottom: 0;
-}
-.task-item.completed {
-opacity: 0.6;
-}
-.task-item.completed .task-text {
-text-decoration: line-through;
-}
-.task-checkbox {
-width: 24px;
-height: 24px;
-border-radius: 50%;
-border: 2px solid var(--tg-theme-button-color, #2481cc);
-margin-right: 12px;
-display: flex;
-justify-content: center;
-align-items: center;
-cursor: pointer;
-flex-shrink: 0;
-}
-.task-checkbox.checked {
-background-color: var(--tg-theme-button-color, #2481cc);
-}
-.task-checkbox.checked::after {
-content: '✓';
-color: var(--tg-theme-button-text-color, #ffffff);
-font-size: 14px;
-font-weight: bold;
-}
-.task-text {
-flex-grow: 1;
-font-size: 16px;
-line-height: 1.4;
-}
-.add-task-btn {
-background-color: var(--tg-theme-button-color, #2481cc);
-color: var(--tg-theme-button-text-color, #ffffff);
-border: none;
-border-radius: 8px;
-padding: 12px;
-width: 100%;
-font-size: 16px;
-font-weight: 600;
-cursor: pointer;
-margin-top: 8px;
-}
-.input-group {
-display: flex;
-gap: 8px;
-margin-top: 12px;
-display: none;
-}
-.input-group.active {
-display: flex;
-}
-input[type="text"] {
-flex-grow: 1;
-padding: 10px;
-border: 1px solid var(--tg-theme-hint-color, #ccc);
-border-radius: 8px;
-font-size: 16px;
-background-color: var(--tg-theme-bg-color, #fff);
-color: var(--tg-theme-text-color, #000);
-outline: none;
-}
-.save-btn {
-background-color: var(--tg-theme-button-color, #2481cc);
-color: var(--tg-theme-button-text-color, #ffffff);
-border: none;
-border-radius: 8px;
-padding: 10px 16px;
-font-weight: 600;
-}
-.delete-btn {
-color: #ff3b30;
-font-size: 18px;
-background: none;
-border: none;
-cursor: pointer;
-padding: 0 8px;
-}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Панель Задач Инспектора</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 16px;
+            color: var(--tg-theme-text-color, #000);
+            text-align: center;
+        }
+        .category {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .category-title {
+            font-weight: 600;
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: var(--tg-theme-hint-color, #999999);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f0f0f0);
+        }
+        .task-item:last-child {
+            border-bottom: none;
+            padding-bottom: 0;
+        }
+        .task-item.completed {
+            opacity: 0.6;
+        }
+        .task-item.completed .task-text {
+            text-decoration: line-through;
+        }
+        .task-checkbox {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            border: 2px solid var(--tg-theme-button-color, #2481cc);
+            margin-right: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            flex-shrink: 0;
+        }
+        .task-checkbox.checked {
+            background-color: var(--tg-theme-button-color, #2481cc);
+        }
+        .task-checkbox.checked::after {
+            content: '✓';
+            color: var(--tg-theme-button-text-color, #ffffff);
+            font-size: 14px;
+            font-weight: bold;
+        }
+        .task-text {
+            flex-grow: 1;
+            font-size: 16px;
+            line-height: 1.4;
+        }
+        .add-task-btn {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 12px;
+            width: 100%;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        .input-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            display: none;
+        }
+        .input-group.active {
+            display: flex;
+        }
+        input[type="text"] {
+            flex-grow: 1;
+            padding: 10px;
+            border: 1px solid var(--tg-theme-hint-color, #ccc);
+            border-radius: 8px;
+            font-size: 16px;
+            background-color: var(--tg-theme-bg-color, #fff);
+            color: var(--tg-theme-text-color, #000);
+            outline: none;
+        }
+        .save-btn {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+            border: none;
+            border-radius: 8px;
+            padding: 10px 16px;
+            font-weight: 600;
+        }
+        .delete-btn {
+            color: #ff3b30;
+            font-size: 18px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0 8px;
+        }
+    </style>
 </head>
 <body>
-<h1>Задачи Инспектора</h1>
+    <h1>Задачи Инспектора</h1>
 
-<div id="app"></div>
+    <div id="app"></div>
 
-<script>
-const tg = window.Telegram.WebApp;
-tg.expand();
+    <script>
+        const tg = window.Telegram.WebApp;
+        tg.expand();
 
-let tasks = [
-{ id: 1, text: "Принять и разобрать итоговый рапорт и фото нарушений (в 10:45)", category: "today", done: false },
-{ id: 2, text: "Контроль новых требований ГДЗС (датчики 171 приказа)", category: "units", done: false }
-];
+        let tasks = [
+            { id: 1, text: "Принять и разобрать итоговый рапорт и фото нарушений (в 10:45)", category: "today", done: false },
+            { id: 2, text: "Контроль новых требований ГДЗС (датчики 171 приказа)", category: "units", done: false }
+        ];
 
-const categories = [
-{ id: 'today', name: '📌 На сегодня' },
-{ id: 'tomorrow', name: '⏳ Ближайшие сутки' },
-{ id: 'personnel', name: '👥 Личный состав' },
-{ id: 'units', name: '🏢 Подразделения' },
-{ id: 'done', name: '✅ Выполненные' }
-];
+        const categories = [
+            { id: 'today', name: '📌 На сегодня' },
+            { id: 'tomorrow', name: '⏳ Ближайшие сутки' },
+            { id: 'personnel', name: '👥 Личный состав' },
+            { id: 'units', name: '🏢 Подразделения' },
+            { id: 'done', name: '✅ Выполненные' }
+        ];
 
-// Используем CloudStorage Telegram (привязка к аккаунту Игоря)
-tg.CloudStorage.getItem('inspector_tasks', (err, value) => {
-if (!err && value) {
-try {
-tasks = JSON.parse(value);
-} catch(e) {}
-}
-render();
-});
+        tg.CloudStorage.getItem('inspector_tasks', (err, value) => {
+            if (!err && value) {
+                try {
+                    tasks = JSON.parse(value);
+                } catch(e) {}
+            }
+            render();
+        });
 
-function saveTasks() {
-tg.CloudStorage.setItem('inspector_tasks', JSON.stringify(tasks));
-}
+        function saveTasks() {
+            tg.CloudStorage.setItem('inspector_tasks', JSON.stringify(tasks));
+        }
 
-function toggleTask(id) {
-const task = tasks.find(t =>
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.done = !task.done;
+                saveTasks();
+                render();
+                tg.HapticFeedback.impactOccurred(task.done ? 'medium' : 'light');
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            saveTasks();
+            render();
+            tg.HapticFeedback.impactOccurred('light');
+        }
+
+        function showAddInput(categoryId) {
+            document.querySelectorAll('.input-group').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.add-task-btn').forEach(el => el.style.display = 'block');
+            
+            document.getElementById(`input-group-${categoryId}`).classList.add('active');
+            document.getElementById(`btn-${categoryId}`).style.display = 'none';
+            document.getElementById(`input-${categoryId}`).focus();
+        }
+
+        function addTask(categoryId) {
+            const input = document.getElementById(`input-${categoryId}`);
+            const text = input.value.trim();
+            if (text) {
+                tasks.push({
+                    id: Date.now(),
+                    text: text,
+                    category: categoryId,
+                    done: false
+                });
+                saveTasks();
+                render();
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+
+        function render() {
+            const app = document.getElementById('app');
+            app.innerHTML = '';
+
+            categories.forEach(cat => {
+                let catTasks = [];
+                if (cat.id === 'done') {
+                    catTasks = tasks.filter(t => t.done);
+                } else {
+                    catTasks = tasks.filter(t => t.category === cat.id && !t.done);
+                }
+
+                if (catTasks.length > 0 || cat.id !== 'done') {
+                    const section = document.createElement('div');
+                    section.className = 'category';
+                    
+                    let html = `<div class="category-title">${cat.name}</div>`;
+                    html += `<ul class="task-list">`;
+                    
+                    catTasks.forEach(t => {
+                        html += `
+                            <li class="task-item ${t.done ? 'completed' : ''}">
+                                <div class="task-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
+                                <div class="task-text" onclick="toggleTask(${t.id})">${t.text}</div>
+                                <button class="delete-btn" onclick="deleteTask(${t.id})">×</button>
+                            </li>
+                        `;
+                    });
+                    
+                    html += `</ul>`;
+
+                    if (cat.id !== 'done') {
+                        html += `
+                            <button id="btn-${cat.id}" class="add-task-btn" onclick="showAddInput('${cat.id}')">+ Добавить</button>
+                            <div id="input-group-${cat.id}" class="input-group">
+                                <input type="text" id="input-${cat.id}" placeholder="Новая задача..." onkeypress="if(event.key === 'Enter') addTask('${cat.id}')">
+                                <button class="save-btn" onclick="addTask('${cat.id}')">✔</button>
+                            </div>
+                        `;
+                    }
+
+                    section.innerHTML = html;
+                    app.appendChild(section);
+                }
+            });
+        }
+
+        render();
+        tg.ready();
+    </script>
+</body>
+</html>
