@@ -2,63 +2,92 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Панель Задач Инспектора</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <title>Панель Инспектора v5 (Компакт)</title>
+    <script src="https://telegram.org/js/telegram-web-app.js?v=2"></script>
     <style>
+        :root {
+            --modal-animation-duration: 0.3s;
+        }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
             background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
             color: var(--tg-theme-text-color, #000000);
             margin: 0;
-            padding: 16px;
+            padding: 8px;
+            padding-bottom: 90px;
             box-sizing: border-box;
         }
-        h1 {
-            font-size: 24px;
-            margin-bottom: 16px;
-            color: var(--tg-theme-text-color, #000);
+        .header {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            padding: 12px;
             text-align: center;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            border-radius: 12px;
         }
+        h1 {
+            font-size: 18px;
+            margin: 0 0 12px 0;
+        }
+        .tabs {
+            display: flex;
+            background-color: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 8px;
+            padding: 4px;
+        }
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 8px;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: 0.2s;
+        }
+        .tab.active {
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.1);
+        }
+        .content { padding-top: 12px; }
+        .view-section { display: none; }
+        .view-section.active { display: block; }
         .category {
             background-color: var(--tg-theme-bg-color, #ffffff);
             border-radius: 12px;
-            padding: 16px;
-            margin-bottom: 16px;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            padding: 12px;
+            margin-bottom: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+        }
+        .category-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
         }
         .category-title {
             font-weight: 600;
-            font-size: 16px;
-            margin-bottom: 12px;
-            color: var(--tg-theme-hint-color, #999999);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
+            font-size: 15px;
         }
-        .task-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
+        .task-list { list-style: none; padding: 0; margin: 0; }
         .task-item {
             display: flex;
             align-items: center;
-            padding: 12px 0;
+            padding: 8px 0;
             border-bottom: 1px solid var(--tg-theme-secondary-bg-color, #f0f0f0);
         }
-        .task-item:last-child {
-            border-bottom: none;
-            padding-bottom: 0;
-        }
-        .task-item.completed {
-            opacity: 0.6;
-        }
-        .task-item.completed .task-text {
-            text-decoration: line-through;
-        }
+        .task-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .task-item.completed { opacity: 0.6; }
+        .task-item.completed .task-text { text-decoration: line-through; color: var(--tg-theme-hint-color, #999); }
         .task-checkbox {
-            width: 24px;
-            height: 24px;
+            width: 22px; height: 22px;
             border-radius: 50%;
             border: 2px solid var(--tg-theme-button-color, #2481cc);
             margin-right: 12px;
@@ -68,191 +97,560 @@
             cursor: pointer;
             flex-shrink: 0;
         }
-        .task-checkbox.checked {
-            background-color: var(--tg-theme-button-color, #2481cc);
-        }
-        .task-checkbox.checked::after {
-            content: '✓';
-            color: var(--tg-theme-button-text-color, #ffffff);
-            font-size: 14px;
-            font-weight: bold;
-        }
-        .task-text {
-            flex-grow: 1;
-            font-size: 16px;
-            line-height: 1.4;
-        }
-        .add-task-btn {
+        .task-checkbox.checked { background-color: var(--tg-theme-button-color, #2481cc); }
+        .task-checkbox.checked::after { content: '✓'; color: var(--tg-theme-button-text-color, #ffffff); font-size: 12px; }
+        .task-text { flex-grow: 1; font-size: 15px; cursor: pointer; }
+        .task-assignee { font-size: 12px; color: var(--tg-theme-hint-color, #999); margin-top: 4px; }
+        
+        .fab {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 56px;
+            height: 56px;
             background-color: var(--tg-theme-button-color, #2481cc);
             color: var(--tg-theme-button-text-color, #ffffff);
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            width: 100%;
-            font-size: 16px;
-            font-weight: 600;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 36px;
+            line-height: 56px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.25);
             cursor: pointer;
-            margin-top: 8px;
+            z-index: 1000;
+            transition: transform 0.2s;
         }
-        .input-group {
+        .fab:active { transform: scale(0.95); }
+
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
             display: flex;
-            gap: 8px;
-            margin-top: 12px;
-            display: none;
+            align-items: flex-end; /* Slide up from bottom */
+            justify-content: center;
+            padding-top: 0;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity var(--modal-animation-duration) ease, visibility var(--modal-animation-duration) ease;
         }
-        .input-group.active {
+        .modal-overlay.visible { opacity: 1; visibility: visible; }
+        .modal-content {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            width: 100%;
+            max-width: 100%;
+            margin: 0;
+            padding: 16px;
+            box-sizing: border-box;
+            border-radius: 0; /* Full screen, no rounded corners */
+            transform: translateY(100%);
+            transition: transform var(--modal-animation-duration) ease;
+            box-shadow: 0 -5px 20px rgba(0,0,0,0.2);
             display: flex;
+            flex-direction: column;
+            height: 100vh; /* Full screen height */
+            max-height: 100vh;
         }
-        input[type="text"] {
-            flex-grow: 1;
-            padding: 10px;
+        .modal-overlay.visible .modal-content { transform: translateY(0); }
+        .modal-content h2 { font-size: 18px; margin: 0 0 16px; text-align: center; flex-shrink: 0; }
+        #task-text-input {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
             border: 1px solid var(--tg-theme-hint-color, #ccc);
             border-radius: 8px;
-            font-size: 16px;
-            background-color: var(--tg-theme-bg-color, #fff);
-            color: var(--tg-theme-text-color, #000);
-            outline: none;
+            box-sizing: border-box;
+            margin-bottom: 16px;
+            background: var(--tg-theme-bg-color, #fff);
+            min-height: 150px;
+            flex-grow: 1; /* Takes up all available space */
+            resize: none; /* No need to resize if it's full screen */
         }
-        .save-btn {
-            background-color: var(--tg-theme-button-color, #2481cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
+        .assignee-list {
+            overflow-y: auto;
+            background: var(--tg-theme-bg-color, #fff);
+            border-radius: 8px;
+            padding: 8px;
+            margin-bottom: 16px;
+            max-height: 35vh; /* Restrict height so textarea stays large */
+            flex-shrink: 0;
+        }
+        .assignee-item { display: flex; align-items: center; padding: 8px; }
+        .assignee-item input { width: 20px; height: 20px; margin-right: 12px; }
+        .assignee-item label { font-size: 16px; }
+        .modal-actions { display: flex; gap: 12px; flex-shrink: 0; }
+        .modal-button {
+            flex: 1;
+            padding: 14px;
             border: none;
             border-radius: 8px;
-            padding: 10px 16px;
+            font-size: 16px;
             font-weight: 600;
-        }
-        .delete-btn {
-            color: #ff3b30;
-            font-size: 18px;
-            background: none;
-            border: none;
             cursor: pointer;
-            padding: 0 8px;
+        }
+        .save-task-btn {
+            background-color: var(--tg-theme-button-color, #2481cc);
+            color: var(--tg-theme-button-text-color, #ffffff);
+        }
+        .cancel-btn {
+            background-color: var(--tg-theme-secondary-bg-color, #e0e0e0);
+            color: var(--tg-theme-text-color, #000);
+        }
+        .empty-state {
+            text-align: center;
+            color: var(--tg-theme-hint-color, #999);
+            padding: 32px 16px;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
-    <h1>Задачи Инспектора</h1>
+    <div class="header">
+        <h1>Панель Инспектора</h1>
+        <div class="tabs">
+            <div class="tab active" onclick="switchTab('active')" id="tab-active">Текущие задачи</div>
+            <div class="tab" onclick="switchTab('archive')" id="tab-archive">Архив</div>
+        </div>
+    </div>
 
-    <div id="app"></div>
+    <div class="content">
+        <div id="view-active" class="view-section active">
+            <div id="app-active"></div>
+            <div style="text-align:center; padding: 20px 0;">
+                <button onclick="addUser()" style="background:var(--tg-theme-button-color, #2481cc); color:var(--tg-theme-button-text-color, #fff); border:none; padding:10px 20px; border-radius:8px; font-weight:bold; cursor:pointer; width: 100%; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">+ Добавить раздел (человека)</button>
+            </div>
+        </div>
+        <div id="view-archive" class="view-section">
+            <div id="app-archive"></div>
+        </div>
+    </div>
+
+    <div class="fab" onclick="openAddTaskModal()">+</div>
+    <div onclick="recoverData()" style="position:fixed; bottom:20px; left:20px; z-index:9999; background:#ff3b30; color:white; padding:15px; border-radius:12px; font-weight:bold; box-shadow:0 4px 12px rgba(0,0,0,0.3); font-size:14px;">🆘 Восстановить всё</div>
+
+    <div id="addTaskModal" class="modal-overlay">
+        <div class="modal-content">
+            <h2>Новая задача</h2>
+            <textarea id="task-text-input" placeholder="Введите одну или несколько задач, каждая с новой строки..." rows="8"></textarea>
+            <div class="assignee-list" id="modal-assignee-list">
+                <!-- Assignees will be populated by JS -->
+            </div>
+            <div class="modal-actions">
+                <button class="modal-button cancel-btn" onclick="closeAddTaskModal()">Отмена</button>
+                <button class="modal-button save-task-btn" onclick="addTask()">Сохранить</button>
+            </div>
+        </div>
+    </div>
 
     <script>
         const tg = window.Telegram.WebApp;
         tg.expand();
 
-        let tasks = [
-            { id: 1, text: "Принять и разобрать итоговый рапорт и фото нарушений (в 10:45)", category: "today", done: false },
-            { id: 2, text: "Контроль новых требований ГДЗС (датчики 171 приказа)", category: "units", done: false }
+        let tasks = [];
+        let customUsers = [];
+        const initialUsers = [
+            { id: 'me', name: '📌 Мои задачи' },
+            { id: 'sadovskiy', name: '👤 Садовский С.Н.' },
+            { id: 'nekrasov', name: '👤 Некрасов И.Ю.' },
+            { id: 'nozhkevich', name: '👤 Янушкевич П.В.' },
+            { id: 'lisitsa', name: '👤 Лисица Д.В.' }
         ];
+        let currentTab = 'active';
 
-        const categories = [
-            { id: 'today', name: '📌 На сегодня' },
-            { id: 'tomorrow', name: '⏳ Ближайшие сутки' },
-            { id: 'personnel', name: '👥 Личный состав' },
-            { id: 'units', name: '🏢 Подразделения' },
-            { id: 'done', name: '✅ Выполненные' }
-        ];
-
-        tg.CloudStorage.getItem('inspector_tasks', (err, value) => {
-            if (!err && value) {
-                try {
-                    tasks = JSON.parse(value);
-                } catch(e) {}
-            }
+        function switchTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.view-section').forEach(v => v.classList.remove('active'));
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            document.getElementById(`view-${tabId}`).classList.add('active');
             render();
-        });
+            tg.HapticFeedback.impactOccurred('light');
+        }
 
-        function saveTasks() {
-            tg.CloudStorage.setItem('inspector_tasks', JSON.stringify(tasks));
+        const oldKey = 'inspector_data_v3';
+        const newKey = 'inspector_data_v5';
+
+        function processLoadedData(data, isMigration = false) {
+            let loadedTasks = data.tasks || [];
+            let loadedUsers = data.users || [];
+            
+            let finalUsers = [...initialUsers];
+            const initialUserIds = new Set(initialUsers.map(u => u.id));
+
+            // 1. Попытка сопоставить старые ID с новыми
+            let oldIdToNewId = {};
+            const nameMapping = {
+                "садовский с.н.": "sadovskiy",
+                "садовский": "sadovskiy",
+                "некрасов и.ю.": "nekrasov",
+                "некрасов": "nekrasov",
+                "янушкевич п.в.": "nozhkevich",
+                "ножкевич п.в.": "nozhkevich",
+                "ножкевич": "nozhkevich",
+                "янушкевич": "nozhkevich",
+                "лисица д.в.": "lisitsa",
+                "лисица": "lisitsa",
+                "мои задачи": "me"
+            };
+
+            // Mapping fallback: map explicitly known old random IDs if they match expected profiles
+            // But realistically, they are just random timestamps.
+            
+            loadedUsers.forEach(u => {
+                const normName = u.name.replace(/👤|📌/g, '').trim().toLowerCase();
+                // Special check for user_XXXX format that had specific names
+                if (nameMapping[normName]) {
+                    oldIdToNewId[u.id] = nameMapping[normName];
+                }
+            });
+
+            // Fallback for tasks that might belong to missing users from earlier version
+            // Find all unique assignees in tasks that are NOT in loadedUsers or initialUsers
+            const knownOldUserIds = new Set(loadedUsers.map(u => u.id));
+            const activeIds = new Set(finalUsers.map(u => u.id));
+
+            loadedTasks.forEach(t => {
+                if (oldIdToNewId[t.assigneeId]) {
+                    t.assigneeId = oldIdToNewId[t.assigneeId];
+                } else if (!activeIds.has(t.assigneeId) && !knownOldUserIds.has(t.assigneeId)) {
+                    // Task belongs to a truly orphaned ID, bring it back
+                    t.assigneeId = 'me';
+                    if (!t.text.includes("[ВЕРНУЛАСЬ]")) {
+                        t.text = "⚠️ [ВЕРНУЛАСЬ] " + t.text;
+                    }
+                }
+            });
+
+            // 3. Добавляем реальных кастомных пользователей
+            let seenNames = new Set(finalUsers.map(u => u.name.replace(/👤|📌/g, '').trim().toLowerCase()));
+            
+            loadedUsers.forEach(u => {
+                const normName = u.name.replace(/👤|📌/g, '').trim().toLowerCase();
+                if (!initialUserIds.has(u.id) && !nameMapping[normName] && !seenNames.has(normName)) {
+                    seenNames.add(normName);
+                    finalUsers.push(u);
+                }
+            });
+
+            // 4. Окончательная проверка: если задача все еще висит на неизвестном ID
+            const finalActiveIds = new Set(finalUsers.map(u => u.id));
+            
+            loadedTasks.forEach(t => {
+                if (!finalActiveIds.has(t.assigneeId)) {
+                    t.assigneeId = 'me'; // Переносим к себе
+                    if (!t.text.includes("[ВОССТАНОВЛЕНО]")) {
+                        t.text = "⚠️ [ВОССТАНОВЛЕНО] " + t.text;
+                    }
+                }
+            });
+
+            tasks = loadedTasks;
+            customUsers = finalUsers;
+            
+            saveData(); // Force save to persist recovered tasks
+            render();
+        }
+
+        function loadAndMigrateData() {
+            tg.CloudStorage.getItem(newKey, (err, value) => {
+                if (!err && value) {
+                    processLoadedData(JSON.parse(value), true); // FORCE rescue logic to run
+                } else {
+                    tg.CloudStorage.getItem(oldKey, (err_old, value_old) => {
+                        if (!err_old && value_old) {
+                            tg.showAlert("Обновление данных...");
+                            const oldData = JSON.parse(value_old);
+                            processLoadedData(oldData, true);
+                            tg.CloudStorage.removeItem(oldKey);
+                        } else {
+                            customUsers = [...initialUsers];
+                            tasks = [];
+                            render();
+                        }
+                    });
+                }
+            });
+        }
+        
+        loadAndMigrateData();
+
+        function saveData() {
+            const data = { tasks, users: customUsers };
+            tg.CloudStorage.setItem(newKey, JSON.stringify(data));
+        }
+
+        
+        function recoverData() {
+            tg.CloudStorage.getKeys((err, keys) => {
+                if (err) {
+                    tg.showAlert("Ошибка получения ключей: " + err);
+                    return;
+                }
+                tg.showAlert("Найдены ключи: " + keys.join(', '));
+                
+                let restoredCount = 0;
+                let keysToCheck = keys.filter(k => k.includes('inspector_data'));
+                
+                if (keysToCheck.length === 0) {
+                    tg.showAlert("Старых данных не найдено в облаке.");
+                    return;
+                }
+
+                let processed = 0;
+                keysToCheck.forEach(k => {
+                    tg.CloudStorage.getItem(k, (e, v) => {
+                        processed++;
+                        if (!e && v) {
+                            try {
+                                let oldData = JSON.parse(v);
+                                let oldTasks = oldData.tasks || [];
+                                
+                                // Merge tasks
+                                oldTasks.forEach(ot => {
+                                    // Check if task with same text exists
+                                    let exists = tasks.find(t => t.text === ot.text);
+                                    if (!exists) {
+                                        let newTask = {...ot};
+                                        newTask.id = Date.now() + Math.floor(Math.random() * 10000);
+                                        
+                                        // Try to map user
+                                        let userFound = customUsers.find(cu => cu.id === newTask.assigneeId);
+                                        if (!userFound) {
+                                            newTask.assigneeId = 'me';
+                                            newTask.text = "⚠️ [ИЗ ПРОШЛОГО] " + newTask.text;
+                                        }
+                                        
+                                        tasks.push(newTask);
+                                        restoredCount++;
+                                    }
+                                });
+                            } catch(err2) {
+                                console.error(err2);
+                            }
+                        }
+                        
+                        if (processed === keysToCheck.length) {
+                            saveData();
+                            render();
+                            tg.showAlert("Восстановлено старых задач: " + restoredCount);
+                        }
+                    });
+                });
+            });
+        }
+
+        function addUser() {
+            const name = prompt("Введите ФИО или название раздела:");
+            if (name !== null && name.trim() !== "") {
+                customUsers.push({
+                    id: 'user_' + Date.now(),
+                    name: '👤 ' + name.trim()
+                });
+                saveData();
+                render();
+                tg.HapticFeedback.impactOccurred('medium');
+            }
+        }
+
+        function editUser(id) {
+            if (id === 'me') {
+                tg.showAlert("Нельзя редактировать основной раздел");
+                return;
+            }
+            const user = customUsers.find(u => u.id === id);
+            if (user) {
+                const currentName = user.name.replace(/👤|📌/g, '').trim();
+                const newName = prompt("Новое имя раздела/сотрудника:", currentName);
+                if (newName !== null && newName.trim() !== "") {
+                    user.name = '👤 ' + newName.trim();
+                    saveData();
+                    render();
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            }
+        }
+
+        function deleteUser(id) {
+            if (id === 'me') {
+                tg.showAlert("Нельзя удалить основной раздел");
+                return;
+            }
+            tg.showConfirm("Точно удалить? Все задачи этого человека тоже удалятся!", (confirmed) => {
+                if (confirmed) {
+                    customUsers = customUsers.filter(u => u.id !== id);
+                    tasks = tasks.filter(t => t.assigneeId !== id);
+                    saveData();
+                    render();
+                    tg.HapticFeedback.impactOccurred('medium');
+                }
+            });
+        }
+
+        function editTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                const newText = prompt("Редактировать задачу:", task.text);
+                if (newText !== null && newText.trim() !== "") {
+                    task.text = newText.trim();
+                    saveData();
+                    render();
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            }
+        }
+        
+        function openAddTaskModal() {
+            const assigneeList = document.getElementById('modal-assignee-list');
+            assigneeList.innerHTML = `
+                <div class="assignee-item">
+                    <input type="checkbox" id="assignee-all" onchange="toggleAllAssignees(this.checked)">
+                    <label for="assignee-all"><strong>Выбрать всех</strong></label>
+                </div>
+            `;
+            customUsers.forEach(user => {
+                assigneeList.innerHTML += `
+                    <div class="assignee-item">
+                        <input type="checkbox" id="assignee-${user.id}" name="assignees" value="${user.id}">
+                        <label for="assignee-${user.id}">${user.name}</label>
+                    </div>
+                `;
+            });
+            document.getElementById('addTaskModal').classList.add('visible');
+        }
+
+        function closeAddTaskModal() {
+            document.getElementById('task-text-input').value = '';
+            document.getElementById('addTaskModal').classList.remove('visible');
+        }
+        
+        function toggleAllAssignees(checked) {
+             document.getElementsByName('assignees').forEach(checkbox => checkbox.checked = checked);
+        }
+
+        function addTask() {
+            const text = document.getElementById('task-text-input').value.trim();
+            const selectedAssignees = Array.from(document.getElementsByName('assignees'))
+                .filter(checkbox => checkbox.checked)
+                .map(checkbox => checkbox.value);
+
+            const taskLines = text.split('\n').map(line => line.trim()).filter(line => line.length > 0);
+
+            if (taskLines.length > 0 && selectedAssignees.length > 0) {
+                taskLines.forEach(taskText => {
+                    selectedAssignees.forEach(assigneeId => {
+                        tasks.push({
+                            id: Date.now() + Math.random(),
+                            text: taskText,
+                            assigneeId: assigneeId,
+                            done: false
+                        });
+                    });
+                });
+                
+                saveData();
+                render();
+                closeAddTaskModal();
+                tg.HapticFeedback.notificationOccurred('success');
+            } else if (taskLines.length === 0) {
+                tg.showAlert("Введите текст задачи");
+            } else {
+                tg.showAlert("Выберите хотя бы одного исполнителя");
+            }
         }
 
         function toggleTask(id) {
             const task = tasks.find(t => t.id === id);
             if (task) {
                 task.done = !task.done;
-                saveTasks();
+                saveData();
                 render();
                 tg.HapticFeedback.impactOccurred(task.done ? 'medium' : 'light');
             }
         }
-
+        
         function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            saveTasks();
-            render();
-            tg.HapticFeedback.impactOccurred('light');
-        }
-
-        function showAddInput(categoryId) {
-            document.querySelectorAll('.input-group').forEach(el => el.classList.remove('active'));
-            document.querySelectorAll('.add-task-btn').forEach(el => el.style.display = 'block');
-            
-            document.getElementById(`input-group-${categoryId}`).classList.add('active');
-            document.getElementById(`btn-${categoryId}`).style.display = 'none';
-            document.getElementById(`input-${categoryId}`).focus();
-        }
-
-        function addTask(categoryId) {
-            const input = document.getElementById(`input-${categoryId}`);
-            const text = input.value.trim();
-            if (text) {
-                tasks.push({
-                    id: Date.now(),
-                    text: text,
-                    category: categoryId,
-                    done: false
-                });
-                saveTasks();
-                render();
-                tg.HapticFeedback.impactOccurred('light');
-            }
+            tg.showConfirm("Удалить задачу навсегда?", (confirmed) => {
+                if (confirmed) {
+                    tasks = tasks.filter(t => t.id !== id);
+                    saveData();
+                    render();
+                    tg.HapticFeedback.impactOccurred('light');
+                }
+            });
         }
 
         function render() {
-            const app = document.getElementById('app');
-            app.innerHTML = '';
+            const appActive = document.getElementById('app-active');
+            const appArchive = document.getElementById('app-archive');
+            appActive.innerHTML = '';
+            appArchive.innerHTML = '';
 
-            categories.forEach(cat => {
-                let catTasks = [];
-                if (cat.id === 'done') {
-                    catTasks = tasks.filter(t => t.done);
-                } else {
-                    catTasks = tasks.filter(t => t.category === cat.id && !t.done);
+            // --- Рендер активных задач ---
+            customUsers.forEach(user => {
+                const userTasks = tasks.filter(t => t.assigneeId === user.id && !t.done);
+                
+                // CONDITIONAL RENDERING
+                // if(false) ... removed
+                
+                const section = document.createElement('div');
+                section.className = 'category';
+                
+                let html = `<div class="category-header"><div class="category-title">${user.name}</div>`;
+                if (user.id !== 'me') {
+                    html += `<div>
+                                <button onclick="editUser('${user.id}')" style="background:none; border:none; color:var(--tg-theme-button-color, #2481cc); cursor:pointer; font-size:18px; padding:0 8px;">✏️</button>
+                                <button onclick="deleteUser('${user.id}')" style="background:none; border:none; color:#ff3b30; cursor:pointer; font-size:18px; padding:0 8px;">🗑</button>
+                             </div>`;
                 }
+                html += `</div>`;
 
-                if (catTasks.length > 0 || cat.id !== 'done') {
-                    const section = document.createElement('div');
-                    section.className = 'category';
-                    
-                    let html = `<div class="category-title">${cat.name}</div>`;
-                    html += `<ul class="task-list">`;
-                    
-                    catTasks.forEach(t => {
+                html += `<ul class="task-list">`;
+                if (userTasks.length > 0) {
+                    userTasks.forEach(t => {
                         html += `
-                            <li class="task-item ${t.done ? 'completed' : ''}">
-                                <div class="task-checkbox ${t.done ? 'checked' : ''}" onclick="toggleTask(${t.id})"></div>
+                            <li class="task-item">
+                                <div class="task-checkbox" onclick="toggleTask(${t.id})"></div>
                                 <div class="task-text" onclick="toggleTask(${t.id})">${t.text}</div>
-                                <button class="delete-btn" onclick="deleteTask(${t.id})">×</button>
+                                <button class="edit-btn" onclick="editTask(${t.id})" style="background:none; border:none; cursor:pointer; font-size:18px; margin-left:8px; padding:0 8px; color:var(--tg-theme-button-color, #2481cc);">✏️</button>
                             </li>
                         `;
                     });
-                    
-                    html += `</ul>`;
-
-                    if (cat.id !== 'done') {
-                        html += `
-                            <button id="btn-${cat.id}" class="add-task-btn" onclick="showAddInput('${cat.id}')">+ Добавить</button>
-                            <div id="input-group-${cat.id}" class="input-group">
-                                <input type="text" id="input-${cat.id}" placeholder="Новая задача..." onkeypress="if(event.key === 'Enter') addTask('${cat.id}')">
-                                <button class="save-btn" onclick="addTask('${cat.id}')">✔</button>
-                            </div>
-                        `;
-                    }
-
-                    section.innerHTML = html;
-                    app.appendChild(section);
+                } else {
+                     html += `<li class="task-item" style="opacity:0.6; border:none;">Задач нет</li>`;
                 }
+                html += `</ul>`;
+                section.innerHTML = html;
+                appActive.appendChild(section);
             });
+
+            // --- Рендер архива (выполненных) ---
+            const doneTasks = tasks.filter(t => t.done).reverse();
+            if (doneTasks.length > 0) {
+                let html = `<ul class="task-list">`;
+                doneTasks.forEach(t => {
+                    const owner = customUsers.find(u => u.id === t.assigneeId);
+                    const ownerName = owner ? owner.name.replace(/👤|📌/g, '').trim() : 'Неизвестно';
+                    html += `
+                        <li class="task-item completed">
+                            <div class="task-checkbox checked" onclick="toggleTask(${t.id})"></div>
+                            <div class="task-text" onclick="toggleTask(${t.id})">
+                                ${t.text}
+                                <div class="task-assignee">Исполнитель: ${ownerName}</div>
+                            </div>
+                            <button class="delete-btn" onclick="deleteTask(${t.id})" style="background:none; border:none; cursor:pointer; font-size:18px; color:#ff3b30; padding:0 8px;">🗑</button>
+                        </li>
+                    `;
+                });
+                html += `</ul>`;
+                appArchive.innerHTML = `<div class="category">${html}</div>`;
+            } else {
+                appArchive.innerHTML = `<div class="empty-state">Архив пуст.</div>`;
+            }
         }
 
         render();
